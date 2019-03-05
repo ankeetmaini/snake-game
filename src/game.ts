@@ -21,6 +21,8 @@ const getNewHead = (curr: number[], direction: Direction): Point => {
   }
 };
 
+const getRandom = (bound: number) => Math.floor(Math.random() * bound);
+
 export default function Game(
   rows: number = 5,
   cols: number = 5,
@@ -28,19 +30,14 @@ export default function Game(
 ) {
   // only to copy it without having to create on every setState
   const pristineGrid = getInitialGrid(rows, cols);
-  const initialSnake: Point[] = [
-    [0, cols - 4],
-    [0, cols - 3],
-    [0, cols - 2],
-    [0, cols - 1]
-  ];
+  const initialSnake: Point[] = [[0, cols - 1]];
   const initialFood: Point = [0, 0];
   // state
   let state: IState = null;
   // DOM nodes
   const dom = {
-    resultContainer: document.getElementById("root"),
-    snakeLength: document.getElementById("snake-length")
+    resultContainer: <HTMLDivElement>document.getElementById("root"),
+    snakeLength: <HTMLHeadingElement>document.getElementById("snake-length")
   };
 
   const setState = (args: Exclude<Partial<IState>, "grid">) => {
@@ -68,27 +65,47 @@ export default function Game(
     const inBounds = x >= 0 && y >= 0 && x < rows && y < cols;
     if (!inBounds) return true;
     // or it touched itself
-    if (state.grid[x][y] === CellValue.EMPTY) return false;
-    return true;
+    if (state.grid[x][y] === CellValue.SNAKE) return true;
+    return false;
+  };
+
+  const ateFood = ([x, y]: Point) => {
+    if (state.grid[x][y] === CellValue.FOOD) return true;
+    return false;
+  };
+
+  const getNewFood = () => {
+    let food: Point | null;
+    do {
+      food = [getRandom(rows), getRandom(cols)];
+    } while (state.grid[food[0]][food[1]] !== CellValue.EMPTY);
+    return food;
   };
 
   const moveSnake = () => {
     const { snake, direction } = state;
+    let { food } = state;
     const currHead = snake[0];
-    // remove last bit of snake
-    snake.splice(-1);
-    // add new snake
     const newHead = getNewHead(currHead, direction);
-    const gameOver = isGameOver(newHead);
 
+    const gameOver = isGameOver(newHead);
     if (gameOver) {
       setState({ gameOver });
       return;
     }
 
-    // else update the snake
+    // did it eat food?
+    const ate = ateFood(newHead);
+    if (ate) {
+      food = getNewFood();
+    } else {
+      // remove last bit of snake
+      snake.splice(-1);
+    }
+
+    // update the snake head so that it moves forward
     snake.unshift(newHead);
-    setState({ snake });
+    setState({ snake, food });
   };
 
   const registerEventKeyHandlers = () => {
