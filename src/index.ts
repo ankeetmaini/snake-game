@@ -7,8 +7,6 @@ const cols = 8;
 
 // init
 (() => {
-  // this draw function needs to be called in raf
-  const draw = Renderer();
-  const start = Game(rows, cols, draw);
+  const start = Game(rows, cols, Renderer());
   start();
 })();
