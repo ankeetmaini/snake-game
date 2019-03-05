@@ -22,14 +22,14 @@ const getNewHead = (curr: number[], direction: Direction): Point => {
 };
 
 export default function Game(
-  rows: number,
-  cols: number,
+  rows: number = 5,
+  cols: number = 5,
   renderer: (grid: CellValue[][]) => void
 ) {
   // only to copy it without having to create on every setState
   const pristineGrid = getInitialGrid(rows, cols);
   const initialSnake: Point[] = [
-    [0, cols - 2],
+    [0, cols - 4],
     [0, cols - 3],
     [0, cols - 2],
     [0, cols - 1]
@@ -37,6 +37,11 @@ export default function Game(
   const initialFood: Point = [0, 0];
   // state
   let state: IState = null;
+  // DOM nodes
+  const dom = {
+    resultContainer: document.getElementById("root"),
+    snakeLength: document.getElementById("snake-length")
+  };
 
   const setState = (args: Exclude<Partial<IState>, "grid">) => {
     const newGrid = [...pristineGrid.map(row => row.slice())];
@@ -54,13 +59,18 @@ export default function Game(
   setState({
     snake: initialSnake,
     food: initialFood,
-    direction: Direction.Left
+    direction: Direction.Left,
+    gameOver: false
   });
 
-  // what needs to happen on each tick
-  // [DONE] 1. move snake
-  // 2. check if food is needed ? place food : noop
-  // 3. render
+  const isGameOver = ([x, y]: Point) => {
+    // checks if snake is out-of-bounds
+    const inBounds = x >= 0 && y >= 0 && x < rows && y < cols;
+    if (!inBounds) return true;
+    // or it touched itself
+    if (state.grid[x][y] === CellValue.EMPTY) return false;
+    return true;
+  };
 
   const moveSnake = () => {
     const { snake, direction } = state;
@@ -69,6 +79,14 @@ export default function Game(
     snake.splice(-1);
     // add new snake
     const newHead = getNewHead(currHead, direction);
+    const gameOver = isGameOver(newHead);
+
+    if (gameOver) {
+      setState({ gameOver });
+      return;
+    }
+
+    // else update the snake
     snake.unshift(newHead);
     setState({ snake });
   };
@@ -97,22 +115,30 @@ export default function Game(
     });
   };
 
+  const showResult = () => {
+    dom.snakeLength.textContent = `Snake length: ${state.snake.length + 1}`;
+    dom.resultContainer.classList.remove("result");
+  };
+
   const start = () => {
     // make snake move every one second
     return setTimeout(() => {
       moveSnake();
       renderer(state.grid);
+
+      // check if game is over or not
+      if (state.gameOver) {
+        showResult();
+        return;
+      }
+
       start();
-    }, 1000);
+    }, 800);
   };
 
   // to start the ball rolling
   return () => {
     registerEventKeyHandlers();
-    const setTimeoutId = start();
-    // to end the game
-    return () => {
-      clearTimeout(setTimeoutId);
-    };
+    start();
   };
 }

@@ -8,3 +8,14 @@ canvas#game-canvas {
   width: 800px;
   margin: 0 auto;
 }
+
+#root {
+  text-align: center;
+  border-bottom: 1px solid #afafaf;
+  margin: 10px;
+  background: lightcoral;
+}
+
+.result {
+  visibility: hidden;
+}

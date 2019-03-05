@@ -23,11 +23,10 @@ export default function renderer() {
             canvas.fillStyle = "yellow";
             break;
           case CellValue.SNAKE:
-            canvas.fillStyle = "#12ea12";
+            canvas.fillStyle = "#97f108";
             break;
         }
         canvas.fillRect(x, y, pixels, pixels);
-        canvas.strokeRect(x, y, pixels, pixels);
       });
     });
   };

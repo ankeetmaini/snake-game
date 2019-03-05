@@ -20,4 +20,5 @@ export interface IState {
   direction: Direction;
   grid: CellValue[][];
   food: Point | null;
+  gameOver: boolean;
 }
